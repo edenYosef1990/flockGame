@@ -9,36 +9,36 @@ fn move_entities(
     mut soldiers_query: Query<&mut Transform, With<WorldEntity>>,
 ){
     for mut soldier_transform in soldiers_query.iter_mut()  {
-        soldier_transform.translation += Vec3::new(5.0, 0.0, 0.0);
+        soldier_transform.translation += Vec3::new(10.0, 0.0, 0.0);
     }
 
 }
 
-fn load_entities(
-    asset_server: Res<AssetServer>,
-    mut commands: Commands,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-){
+fn load_camera( mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
+}
 
-    let texture_handle: Handle<Image> = asset_server.load("Sprites/sheet.png");
-    let texture_atlas =
-    TextureAtlas::from_grid(texture_handle, Vec2::new(32.0, 32.0), 1, 1, None, None);
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
-
-    commands.spawn((SpriteSheetBundle {
-            texture_atlas: texture_atlas_handle,
-            transform: Transform{
-                translation: Vec3 { x: 100.0, y: 10.0, z: 1.0 },
-                ..Default::default()
-            },
-            ..default()
-        }, WorldEntity)
+fn load_path( mut commands: Commands) {
+    let line_shape = shapes::Line (
+        Vec2::new(-100. , -35.),
+        Vec2::new(-200. , -35.)
     );
 
+    commands.spawn((
+        ShapeBundle {
+            path: GeometryBuilder::build_as(&line_shape),
+            ..default()
+        },
+        Fill::color(Color::CYAN),
+        Stroke::new(Color::RED, 10.0),
+    ));
+}
+
+fn load_entities( mut commands: Commands) {
+
     let shape = shapes::RegularPolygon {
-        sides: 6,
-        feature: shapes::RegularPolygonFeature::Radius(200.0),
+        sides: 3,
+        feature: shapes::RegularPolygonFeature::Radius(50.0),
         ..shapes::RegularPolygon::default()
     };
 
@@ -47,8 +47,9 @@ fn load_entities(
             path: GeometryBuilder::build_as(&shape),
             ..default()
         },
-        Fill::color(Color::CYAN),
-        Stroke::new(Color::BLACK, 10.0),
+        Fill::color(Color::DARK_GREEN),
+        Stroke::new(Color::BLACK, 2.0),
+        WorldEntity
     ));
 
     println!("hello there!");
@@ -58,7 +59,9 @@ fn load_entities(
 impl Plugin for HelloPlugin {
     fn build(&self, app: &mut App) {
         app
+        .add_systems(Startup, load_camera)
         .add_systems(Startup, load_entities)
+        .add_systems(Startup, load_path)
         .add_systems(Update, move_entities);
     }
 }
